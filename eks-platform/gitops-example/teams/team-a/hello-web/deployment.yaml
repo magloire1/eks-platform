@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: hello-web }
+  template:
+    metadata:
+      labels: { app: hello-web }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app: hello-web }
+      containers:
+        - name: web
+          image: nginxinc/nginx-unprivileged:stable   # replace with your ECR image, pinned by tag/digest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef: { name: hello-web-secrets }   # created by the ExternalSecret
+          readinessProbe:
+            httpGet: { path: /, port: 8080 }
+          livenessProbe:
+            httpGet: { path: /, port: 8080 }
+            initialDelaySeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }

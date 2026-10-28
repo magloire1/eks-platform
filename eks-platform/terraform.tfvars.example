@@ -1,0 +1,32 @@
+region          = "us-east-1"
+environment     = "prod"
+cluster_name    = "platform"
+cluster_version = "1.35"
+
+domain_name     = "example.com"
+route53_zone_id = "Z0123456789ABCDEFGHIJ"
+acme_email      = "platform-team@example.com"
+alb_scheme      = "internal"
+
+api_allowed_cidrs        = ["203.0.113.0/24"] # office / VPN / CI egress
+platform_admin_role_arns = [] # e.g. SSO role arn:aws:iam::111122223333:role/AWSReservedSSO_PlatformAdmin_abc123 (no path!)
+
+gitops_repo_url     = "https://github.com/my-company/platform-gitops.git"
+gitops_repo_private = true
+
+# Pin after the first successful apply (helm search repo <chart> --versions)
+chart_versions = {
+  # karpenter            = "x.y.z"
+  # argo-cd              = "x.y.z"
+  # cert-manager         = "vx.y.z"
+}
+
+teams = {
+  team-a = {
+    role_arn = "arn:aws:iam::111122223333:role/AWSReservedSSO_TeamA_Dev_abc123"
+    quota    = { cpu = "40", memory = "80Gi", pods = "200" }
+  }
+  team-b = {
+    pod_security = "restricted"
+  }
+}

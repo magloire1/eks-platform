@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-web
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal            # must match the platform's alb_scheme
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: tenants         # shared ALB for all tenants
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+    # Single label under the platform domain so the wildcard cert matches.
+    # Convention: <team>-<app>.<domain>. ExternalDNS creates the Route53 record automatically.
+    - host: team-a-hello-web.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: hello-web, port: { number: 80 } }
